@@ -2,19 +2,10 @@ import open3d as o3d
 import numpy as np
 import tkinter as tk
 from tkinter import Button
+from tkinter import filedialog
 
 # Side Function to convert a point cloud to a mesh using the Ball Pivoting Algorithm
 def convert_to_mesh(point_cloud, radii=[0.6, 0.8, 1.0]):
-    """
-    Convert a point cloud to a mesh using the Ball Pivoting Algorithm (BPA).
-
-    Args:
-        point_cloud (o3d.geometry.PointCloud): The input point cloud.
-        radii (list of float): List of radii to use for the ball pivoting algorithm.
-
-    Returns:
-        o3d.geometry.TriangleMesh: The resulting mesh.
-    """
     #check if points cloud empty
     if len(np.asarray(point_cloud.points))==0:
         print("point cloud is empty")
@@ -34,9 +25,20 @@ def convert_to_mesh(point_cloud, radii=[0.6, 0.8, 1.0]):
     return mesh
 
 
+# Prompt user to select a PLY file
+file_path = filedialog.askopenfilename(
+    title="Select a PLY File", 
+    filetypes=[("PLY Files", "*.ply")]
+)
+if not file_path:
+    print("No file selected. Exiting.")
+    exit()
+
+# Load the selected PLY file
+mazeUrl = file_path
 
 # Path to the Maze PLY file
-mazeUrl= r"C:\Users\USER1\Documents\drone project\colmabbbb\models\maze\source\maze.ply"
+#mazeUrl= r"C:\Users\USER1\Documents\drone project\colmabbbb\models\maze\source\maze.ply"
 
 # Load the PLY file as a mesh
 originalMaze = o3d.io.read_triangle_mesh(mazeUrl)
