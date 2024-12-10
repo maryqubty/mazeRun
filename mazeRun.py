@@ -25,6 +25,7 @@ def convert_to_mesh(point_cloud, radii=[0.6, 0.8, 1.0]):
     return mesh
 
 
+#main code
 # Prompt user to select a PLY file
 file_path = filedialog.askopenfilename(
     title="Select a PLY File", 
@@ -33,41 +34,34 @@ file_path = filedialog.askopenfilename(
 if not file_path:
     print("No file selected. Exiting.")
     exit()
-
 # Load the selected PLY file
 mazeUrl = file_path
-
-# Path to the Maze PLY file
-#mazeUrl= r"C:\Users\USER1\Documents\drone project\colmabbbb\models\maze\source\maze.ply"
-
 # Load the PLY file as a mesh
 originalMaze = o3d.io.read_triangle_mesh(mazeUrl)
 # Visualize the mesh
 originalMaze.compute_vertex_normals()
-#o3d.visualization.draw_geometries([mazeMesh], window_name="mesh of maze before conversion to point cloud")
 
 # Sample point clouds from the mesh
 mazePcd= originalMaze.sample_points_uniformly(number_of_points=50000)
-# Visualize the point cloud
-#o3d.visualization.draw_geometries([mazePcd], window_name="points cloud of maze")
-'''
-# Load the points cloud
-mazePcd = o3d.io.read_point_cloud(mazeUrl)
-# Visualize the point cloud
-o3d.visualization.draw_geometries([mazePcd], window_name="points cloud of maze")
-'''
 # Convert the point cloud to a mesh
 mazeMesh = convert_to_mesh(mazePcd)
-# Visualize the mesh
-#o3d.visualization.draw_geometries([mazeMesh], window_name="mesh of maze after conversion from point cloud")
 
 #now we're going to identify walls and open areas (roads) in a the maze based on depth differences
 # Get depth values
 mazeDepth = np.asarray(mazePcd.points)[:, 1] #assuming the Y axis is the depth axis
+#save the sorted depth values in an output file - sorted
+np.savetxt("sorted_depth_values.txt", np.sort(mazeDepth), delimiter=",")
 # Segment based on depth threshold
-road_depth_threshold = -8 #can be changed based on what we need
-wall_depth_threshold = -5 #can be changed based on what we need
-ground_depth_threshold = 0 #can be changed based on what we need
+#road trip threshold is based on the lowest depth value of the maze
+road_depth_threshold = np.min(mazeDepth)+ 3
+print("road depth threshold: ", road_depth_threshold)
+#wall depth threshold is based on the average depth value of the maze
+wall_depth_threshold = np.mean(mazeDepth)
+print("wall depth threshold: ", wall_depth_threshold)
+#ground threshold is based on the highest depth value of the maze
+ground_depth_threshold = np.max(mazeDepth) 
+print("ground depth threshold: ", ground_depth_threshold)
+
 walls = np.where((mazeDepth > wall_depth_threshold) & (mazeDepth < ground_depth_threshold))[0]
 roads = np.where(mazeDepth <= road_depth_threshold)[0]
 # Create point clouds for walls and roads
