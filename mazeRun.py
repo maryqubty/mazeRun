@@ -55,6 +55,20 @@ print("Depth axis:", depth_axis)
 mazeDepth = np.asarray(mazePcd.points)[:, depth_axis] #depth_axis is the depth axis
 #save the sorted depth values in an output file - sorted
 np.savetxt("sorted_depth_values.txt", np.sort(mazeDepth), delimiter=",")
+
+# Analyze depth distribution and determine thresholds
+depth_values = point_coords[:, depth_axis]
+min_depth, max_depth = np.min(depth_values), np.max(depth_values)
+road_depth_threshold = np.percentile(depth_values, 25)  # Bottom 25% as roads
+print("road depth threshold: ", road_depth_threshold)
+wall_depth_threshold = np.percentile(depth_values, 50)  # Middle 50% as walls
+print("wall depth threshold: ", wall_depth_threshold)
+ground_depth_threshold = np.percentile(depth_values, 75)  # Top 25% as ground
+print("ground depth threshold: ", ground_depth_threshold)
+
+
+
+'''
 # Segment based on depth threshold
 #road trip threshold is based on the lowest depth value of the maze
 road_depth_threshold = np.min(mazeDepth)+ 3
@@ -65,7 +79,7 @@ print("wall depth threshold: ", wall_depth_threshold)
 #ground threshold is based on the highest depth value of the maze
 ground_depth_threshold = np.max(mazeDepth) 
 print("ground depth threshold: ", ground_depth_threshold)
-
+'''
 walls = np.where((mazeDepth > wall_depth_threshold) & (mazeDepth < ground_depth_threshold))[0]
 roads = np.where(mazeDepth <= road_depth_threshold)[0]
 # Create point clouds for walls and roads
@@ -94,6 +108,7 @@ sorted_points = walls_points[np.argsort(walls_points[:, 1])]
 # visualizing the walls mesh
 #wallsMesh = convert_to_mesh(walls_pcd)
 #o3d.visualization.draw_geometries([wallsMesh], window_name="mesh of walls")
+
 
 #now after preparing the point clouds and the meshes of the walls and roads, we can add buttons for more clear visualization:
 # Create a tkinter window
