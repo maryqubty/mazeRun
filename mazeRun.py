@@ -35,20 +35,30 @@ mazeDepth = np.asarray(mazePcd.points)[:, depth_axis] #depth_axis is the depth a
 #save the sorted depth values in an output file - sorted
 np.savetxt("sorted_depth_values.txt", np.sort(mazeDepth), delimiter=",")
 
-# Analyze depth distribution and determine thresholds
-depth_values = point_coords[:, depth_axis]
+# Analyze depth distribution to dynamically adjust thresholds
+depth_values = np.asarray(mazePcd.points)[:, depth_axis]
 min_depth, max_depth = np.min(depth_values), np.max(depth_values)
-road_depth_threshold = np.percentile(depth_values, 25)  # Bottom 25% as roads
-print("road depth threshold: ", road_depth_threshold)
-wall_depth_threshold = np.percentile(depth_values, 50)  # Middle 50% as walls
-print("wall depth threshold: ", wall_depth_threshold)
-ground_depth_threshold = np.percentile(depth_values, 75)  # Top 25% as ground
-print("ground depth threshold: ", ground_depth_threshold)
 
-# Segment the points based on depth thresholds
+#Instead of fixed percentiles, analyze the depth distribution dynamically: Use clustering with KMeans to segment depth dynamically
+from sklearn.cluster import KMeans
+
+depth_values_reshaped = depth_values.reshape(-1, 1)
+kmeans = KMeans(n_clusters=3, random_state=0).fit(depth_values_reshaped)
+cluster_centers = sorted(kmeans.cluster_centers_.flatten())
+road_depth_threshold, wall_depth_threshold, ground_depth_threshold = cluster_centers
+
+print("Dynamically calculated thresholds:")
+print("Road:", road_depth_threshold)
+print("Wall:", wall_depth_threshold)
+print("Ground:", ground_depth_threshold)
+
+# Map categories to ensure correct visualization
 road_points = point_coords[depth_values <= road_depth_threshold]
-wall_points = point_coords[(depth_values > road_depth_threshold) & (depth_values <= wall_depth_threshold)]
-ground_points = point_coords[depth_values > ground_depth_threshold]
+wall_points = point_coords[
+    (depth_values > road_depth_threshold) & (depth_values <= wall_depth_threshold)
+]
+ground_points = point_coords[depth_values > wall_depth_threshold]
+
 
 # Create a tkinter window
 window = tk.Tk()
