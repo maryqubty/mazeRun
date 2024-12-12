@@ -2,128 +2,96 @@ import open3d as o3d
 import numpy as np
 import tkinter as tk
 from tkinter import Button
-
-# Side Function to convert a point cloud to a mesh using the Ball Pivoting Algorithm
-def convert_to_mesh(point_cloud, radii=[0.6, 0.8, 1.0]):
-    """
-    Convert a point cloud to a mesh using the Ball Pivoting Algorithm (BPA).
-
-    Args:
-        point_cloud (o3d.geometry.PointCloud): The input point cloud.
-        radii (list of float): List of radii to use for the ball pivoting algorithm.
-
-    Returns:
-        o3d.geometry.TriangleMesh: The resulting mesh.
-    """
-    #check if points cloud empty
-    if len(np.asarray(point_cloud.points))==0:
-        print("point cloud is empty")
-        return None
-    
-    # Estimate normals if not already present
-    if not point_cloud.has_normals():
-        point_cloud.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.1, max_nn=30))
-    
-    # Perform ball pivoting algorithm
-    pcd_tree = o3d.geometry.KDTreeFlann(point_cloud)
-    mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_ball_pivoting(
-        point_cloud,
-        o3d.utility.DoubleVector(radii)
-    )
-    
-    return mesh
+from tkinter import filedialog
 
 
-
-# Path to the Maze PLY file
-mazeUrl= r"C:\Users\USER1\Documents\drone project\colmabbbb\models\maze\source\maze.ply"
-
+# Prompt user to select a PLY file
+file_path = filedialog.askopenfilename(
+    title="Select a PLY File", 
+    filetypes=[("PLY Files", "*.ply")]
+)
+if not file_path:
+    print("No file selected. Exiting.")
+    exit()
+# Load the selected PLY file
+mazeUrl = file_path
 # Load the PLY file as a mesh
 originalMaze = o3d.io.read_triangle_mesh(mazeUrl)
 # Visualize the mesh
 originalMaze.compute_vertex_normals()
-#o3d.visualization.draw_geometries([mazeMesh], window_name="mesh of maze before conversion to point cloud")
 
 # Sample point clouds from the mesh
 mazePcd= originalMaze.sample_points_uniformly(number_of_points=50000)
-# Visualize the point cloud
-#o3d.visualization.draw_geometries([mazePcd], window_name="points cloud of maze")
-'''
-# Load the points cloud
-mazePcd = o3d.io.read_point_cloud(mazeUrl)
-# Visualize the point cloud
-o3d.visualization.draw_geometries([mazePcd], window_name="points cloud of maze")
-'''
-# Convert the point cloud to a mesh
-mazeMesh = convert_to_mesh(mazePcd)
-# Visualize the mesh
-#o3d.visualization.draw_geometries([mazeMesh], window_name="mesh of maze after conversion from point cloud")
 
-#now we're going to identify walls and open areas (roads) in a the maze based on depth differences
+#Now we're going to identify walls and open areas (roads) in a the maze based on depth differences
+#Identify depth axis based on variance - for each different maze model:
+point_coords = np.asarray(mazePcd.points)
+axis_variances = np.var(point_coords, axis=0)
+depth_axis = np.argmin(axis_variances)  # Axis with least variance is the depth
+print("Depth axis:", depth_axis)
 # Get depth values
-mazeDepth = np.asarray(mazePcd.points)[:, 1] #assuming the Y axis is the depth axis
-# Segment based on depth threshold
-road_depth_threshold = -8 #can be changed based on what we need
-wall_depth_threshold = -5 #can be changed based on what we need
-ground_depth_threshold = 0 #can be changed based on what we need
-walls = np.where((mazeDepth > wall_depth_threshold) & (mazeDepth < ground_depth_threshold))[0]
-roads = np.where(mazeDepth <= road_depth_threshold)[0]
-# Create point clouds for walls and roads
-walls_pcd = o3d.geometry.PointCloud()
-walls_pcd.points = o3d.utility.Vector3dVector(np.asarray(mazePcd.points)[walls, :])
-#this next command doesnt work, i # for now
-#walls_pcd.paint_uniform_color([1, 0, 0])  # Red for walls
+mazeDepth = np.asarray(mazePcd.points)[:, depth_axis] #depth_axis is the depth axis
+#save the sorted depth values in an output file - sorted
+np.savetxt("sorted_depth_values.txt", np.sort(mazeDepth), delimiter=",")
 
-roads_pcd = o3d.geometry.PointCloud()
-roads_pcd.points = o3d.utility.Vector3dVector(np.asarray(mazePcd.points)[roads, :])
-#this next command doesnt work, i # for now
-#roads_pcd.paint_uniform_color([0, 0, 1])  # Blue for roads
+# Analyze depth distribution to dynamically adjust thresholds
+depth_values = np.asarray(mazePcd.points)[:, depth_axis]
+min_depth, max_depth = np.min(depth_values), np.max(depth_values)
 
-# Print the points of maze_pcd to determine which axis is the depth axis
-walls_points = np.asarray(walls_pcd.points)
-sorted_points = walls_points[np.argsort(walls_points[:, 1])]
-# Print sorted points
-print("Points of walls_pcd sorted by Y (ascending):")
-print(sorted_points)
+#Instead of fixed percentiles, analyze the depth distribution dynamically: Use clustering with KMeans to segment depth dynamically
+from sklearn.cluster import KMeans
 
+depth_values_reshaped = depth_values.reshape(-1, 1)
+kmeans = KMeans(n_clusters=3, random_state=0).fit(depth_values_reshaped)
+cluster_centers = sorted(kmeans.cluster_centers_.flatten())
+road_depth_threshold, wall_depth_threshold, ground_depth_threshold = cluster_centers
 
-# Visualize the segmented point clouds of roads
-#o3d.visualization.draw_geometries([roads_pcd], window_name="points cloud Roads")
-# visualizing the roads mesh
-roadsMesh = convert_to_mesh(roads_pcd)
-#o3d.visualization.draw_geometries([roadsMesh], window_name="mesh of roads")
-# Visualize the segmented point clouds of walls
-#o3d.visualization.draw_geometries([walls_pcd], window_name="points cloud Walls")
-# visualizing the walls mesh
-wallsMesh = convert_to_mesh(walls_pcd)
-#o3d.visualization.draw_geometries([wallsMesh], window_name="mesh of walls")
+print("Dynamically calculated thresholds:")
+print("Road:", road_depth_threshold)
+print("Wall:", wall_depth_threshold)
+print("Ground:", ground_depth_threshold)
 
-#now after preparing the point clouds and the meshes of the walls and roads, we can add buttons for more clear visualization:
+'''
+Axis Selection:
+Axis 1 (e.g., Y in many systems): Depth values increase from bottom to top.
+Axis 2 (e.g., Z in many systems): Depth values may increase in the opposite direction (top to bottom or front to back).
+Axis 3 : Left-To-Right.
+'''
+#If the axis direction is inverted, invert the depth values before clustering:
+if depth_axis == 2:  # Assuming Axis 2 needs to be inverted
+    depth_values = -depth_values
+# Map categories to ensure correct visualization
+road_points = point_coords[depth_values < road_depth_threshold]
+#no longer need the rest:
+'''
+wall_points = point_coords[
+    (depth_values > road_depth_threshold) & (depth_values <= wall_depth_threshold)
+]
+ground_points = point_coords[depth_values > wall_depth_threshold]
+'''
+
 # Create a tkinter window
 window = tk.Tk()
 window.title("Maze Segmentation")
 # Set the size of the window (width x height)
 window.geometry("400x300")  # Example size, adjust as needed
 
-#create buttons for the walls and roads
-#button for maze mesh
-maze_button = Button(window, text="Maze Mesh", command=lambda: o3d.visualization.draw_geometries([originalMaze], window_name="Maze Mesh"))
-maze_button.pack()
-#button for maze point cloud
-maze_pcd_button = Button(window, text="Maze Point Cloud", command=lambda: o3d.visualization.draw_geometries([mazePcd], window_name="Maze Point Cloud"))
-maze_pcd_button.pack()
-#button for roads point cloud
-roads_button = Button(window, text="Roads Point Cloud", command=lambda: o3d.visualization.draw_geometries([roads_pcd], window_name="Roads Point Cloud"))
-roads_button.pack()
-#button for roads mesh
-roads_mesh_button = Button(window, text="Roads Mesh", command=lambda: o3d.visualization.draw_geometries([roadsMesh], window_name="Roads Mesh"))
-roads_mesh_button.pack()
-#button for walls point cloud
-walls_button = Button(window, text="Walls Point Cloud", command=lambda: o3d.visualization.draw_geometries([walls_pcd], window_name="Walls Point Cloud"))
-walls_button.pack()
-#button for walls mesh
-walls_mesh_button = Button(window, text="Walls Mesh", command=lambda: o3d.visualization.draw_geometries([wallsMesh], window_name="Walls Mesh"))
-walls_mesh_button.pack()
+# Function to visualize road points
+def visualize_roads():
+    if len(road_points) == 0:
+        print("No road points to display.")
+    else:
+        road_pcd = o3d.geometry.PointCloud()
+        road_pcd.points = o3d.utility.Vector3dVector(road_points)
+        o3d.visualization.draw_geometries([road_pcd], window_name="Road Points")
+
+
+# Add buttons to the window
+btn_roads = Button(window, text="Show cloud-points of walls", command=visualize_roads)
+btn_roads.pack(pady=20)  # Adjust padding as needed
+
 # Run the tkinter main loop
 window.mainloop()
+
+
 #end of the code for now
