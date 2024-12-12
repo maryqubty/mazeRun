@@ -1,0 +1,19 @@
+from visualization import create_gui
+import globals
+
+def main():
+    create_gui()
+
+    '''
+After calling the create_gui function, importing a model and proccessing it we'll have global values:
+mazeUrl, mazePcd, originalMaze, depth_axis, wall_points 
+that we can get and use by calling: globals.mazePcd ... here in the main function
+the "globals" file defines global parameters for easier further implementation.
+wall_points is the most important parameter that contains the points that represent the walls.
+if wall_pcd is needed then we can simply call:
+        walls_pcd = o3d.geometry.PointCloud()
+        walls_pcd.points = o3d.utility.Vector3dVector(walls_points)
+    '''
+
+if __name__ == "__main__":
+    main()

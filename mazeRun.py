@@ -5,7 +5,6 @@ from tkinter import Button
 from tkinter import filedialog
 
 
-#Main Code
 # Prompt user to select a PLY file
 file_path = filedialog.askopenfilename(
     title="Select a PLY File", 
@@ -94,75 +93,5 @@ btn_roads.pack(pady=20)  # Adjust padding as needed
 # Run the tkinter main loop
 window.mainloop()
 
-'''
-# Segment based on depth threshold
-#road trip threshold is based on the lowest depth value of the maze
-road_depth_threshold = np.min(mazeDepth)+ 3
-print("road depth threshold: ", road_depth_threshold)
-#wall depth threshold is based on the average depth value of the maze
-wall_depth_threshold = np.mean(mazeDepth)
-print("wall depth threshold: ", wall_depth_threshold)
-#ground threshold is based on the highest depth value of the maze
-ground_depth_threshold = np.max(mazeDepth) 
-print("ground depth threshold: ", ground_depth_threshold)
 
-walls = np.where((mazeDepth > wall_depth_threshold) & (mazeDepth < ground_depth_threshold))[0]
-roads = np.where(mazeDepth <= road_depth_threshold)[0]
-# Create point clouds for walls and roads
-walls_pcd = o3d.geometry.PointCloud()
-walls_pcd.points = o3d.utility.Vector3dVector(np.asarray(mazePcd.points)[walls, :])
-#this next command doesnt work, i # for now
-#walls_pcd.paint_uniform_color([1, 0, 0])  # Red for walls
-
-roads_pcd = o3d.geometry.PointCloud()
-roads_pcd.points = o3d.utility.Vector3dVector(np.asarray(mazePcd.points)[roads, :])
-#this next command doesnt work, i # for now
-#roads_pcd.paint_uniform_color([0, 0, 1])  # Blue for roads
-
-# Print the points of maze_pcd to determine which axis is the depth axis
-walls_points = np.asarray(walls_pcd.points)
-sorted_points = walls_points[np.argsort(walls_points[:, 1])]
-
-
-# Visualize the segmented point clouds of roads
-#o3d.visualization.draw_geometries([roads_pcd], window_name="points cloud Roads")
-# visualizing the roads mesh
-#roadsMesh = convert_to_mesh(roads_pcd)
-#o3d.visualization.draw_geometries([roadsMesh], window_name="mesh of roads")
-# Visualize the segmented point clouds of walls
-#o3d.visualization.draw_geometries([walls_pcd], window_name="points cloud Walls")
-# visualizing the walls mesh
-#wallsMesh = convert_to_mesh(walls_pcd)
-#o3d.visualization.draw_geometries([wallsMesh], window_name="mesh of walls")
-
-
-#now after preparing the point clouds and the meshes of the walls and roads, we can add buttons for more clear visualization:
-# Create a tkinter window
-window = tk.Tk()
-window.title("Maze Segmentation")
-# Set the size of the window (width x height)
-window.geometry("400x300")  # Example size, adjust as needed
-
-#create buttons for the walls and roads
-#button for maze mesh
-####maze_button = Button(window, text="Maze Mesh", command=lambda: o3d.visualization.draw_geometries([originalMaze], window_name="Maze Mesh"))
-####maze_button.pack()
-#button for maze point cloud
-maze_pcd_button = Button(window, text="Maze Point Cloud", command=lambda: o3d.visualization.draw_geometries([mazePcd], window_name="Maze Point Cloud"))
-maze_pcd_button.pack()
-#button for roads point cloud
-roads_button = Button(window, text="Roads Point Cloud", command=lambda: o3d.visualization.draw_geometries([roads_pcd], window_name="Roads Point Cloud"))
-roads_button.pack()
-#button for roads mesh
-####roads_mesh_button = Button(window, text="Roads Mesh", command=lambda: o3d.visualization.draw_geometries([roadsMesh], window_name="Roads Mesh"))
-####roads_mesh_button.pack()
-#button for walls point cloud
-walls_button = Button(window, text="Walls Point Cloud", command=lambda: o3d.visualization.draw_geometries([walls_pcd], window_name="Walls Point Cloud"))
-walls_button.pack()
-#button for walls mesh
-####walls_mesh_button = Button(window, text="Walls Mesh", command=lambda: o3d.visualization.draw_geometries([wallsMesh], window_name="Walls Mesh"))
-####walls_mesh_button.pack()
-# Run the tkinter main loop
-window.mainloop()
-'''
 #end of the code for now
