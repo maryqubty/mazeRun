@@ -4,25 +4,6 @@ import tkinter as tk
 from tkinter import Button
 from tkinter import filedialog
 
-# Side Function to convert a point cloud to a mesh using the Ball Pivoting Algorithm
-def convert_to_mesh(point_cloud, radii=[0.6, 0.8, 1.0]):
-    #check if points cloud empty
-    if len(np.asarray(point_cloud.points))==0:
-        print("point cloud is empty")
-        return None
-    
-    # Estimate normals if not already present
-    if not point_cloud.has_normals():
-        point_cloud.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.1, max_nn=30))
-    
-    # Perform ball pivoting algorithm
-    pcd_tree = o3d.geometry.KDTreeFlann(point_cloud)
-    mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_ball_pivoting(
-        point_cloud,
-        o3d.utility.DoubleVector(radii)
-    )
-    
-    return mesh
 
 #Main Code
 # Prompt user to select a PLY file
@@ -42,8 +23,6 @@ originalMaze.compute_vertex_normals()
 
 # Sample point clouds from the mesh
 mazePcd= originalMaze.sample_points_uniformly(number_of_points=50000)
-# Convert the point cloud to a mesh
-#######################mazeMesh = convert_to_mesh(mazePcd)
 
 #Now we're going to identify walls and open areas (roads) in a the maze based on depth differences
 #Identify depth axis based on variance - for each different maze model:
@@ -66,7 +45,56 @@ print("wall depth threshold: ", wall_depth_threshold)
 ground_depth_threshold = np.percentile(depth_values, 75)  # Top 25% as ground
 print("ground depth threshold: ", ground_depth_threshold)
 
+# Segment the points based on depth thresholds
+road_points = point_coords[depth_values <= road_depth_threshold]
+wall_points = point_coords[(depth_values > road_depth_threshold) & (depth_values <= wall_depth_threshold)]
+ground_points = point_coords[depth_values > ground_depth_threshold]
 
+# Create a tkinter window
+window = tk.Tk()
+window.title("Maze Segmentation")
+# Set the size of the window (width x height)
+window.geometry("400x300")  # Example size, adjust as needed
+
+# Function to visualize wall points
+def visualize_walls():
+    if len(wall_points) == 0:
+        print("No wall points to display.")
+    else:
+        wall_pcd = o3d.geometry.PointCloud()
+        wall_pcd.points = o3d.utility.Vector3dVector(wall_points)
+        o3d.visualization.draw_geometries([wall_pcd], window_name="Wall Points")
+
+# Function to visualize road points
+def visualize_roads():
+    if len(road_points) == 0:
+        print("No road points to display.")
+    else:
+        road_pcd = o3d.geometry.PointCloud()
+        road_pcd.points = o3d.utility.Vector3dVector(road_points)
+        o3d.visualization.draw_geometries([road_pcd], window_name="Road Points")
+
+# Function to visualize ground points
+def visualize_ground():
+    if len(ground_points) == 0:
+        print("No ground points to display.")
+    else:
+        ground_pcd = o3d.geometry.PointCloud()
+        ground_pcd.points = o3d.utility.Vector3dVector(ground_points)
+        o3d.visualization.draw_geometries([ground_pcd], window_name="Ground Points")
+
+# Add buttons to the window
+btn_walls = Button(window, text="Show Walls", command=visualize_walls)
+btn_walls.pack(pady=20)  # Adjust padding as needed
+
+btn_roads = Button(window, text="Show Roads", command=visualize_roads)
+btn_roads.pack(pady=20)  # Adjust padding as needed
+
+btn_ground = Button(window, text="Show Ground", command=visualize_ground)
+btn_ground.pack(pady=20)  # Adjust padding as needed
+
+# Run the tkinter main loop
+window.mainloop()
 
 '''
 # Segment based on depth threshold
@@ -79,7 +107,7 @@ print("wall depth threshold: ", wall_depth_threshold)
 #ground threshold is based on the highest depth value of the maze
 ground_depth_threshold = np.max(mazeDepth) 
 print("ground depth threshold: ", ground_depth_threshold)
-'''
+
 walls = np.where((mazeDepth > wall_depth_threshold) & (mazeDepth < ground_depth_threshold))[0]
 roads = np.where(mazeDepth <= road_depth_threshold)[0]
 # Create point clouds for walls and roads
@@ -138,4 +166,5 @@ walls_button.pack()
 ####walls_mesh_button.pack()
 # Run the tkinter main loop
 window.mainloop()
+'''
 #end of the code for now
