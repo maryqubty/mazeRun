@@ -52,28 +52,30 @@ print("Road:", road_depth_threshold)
 print("Wall:", wall_depth_threshold)
 print("Ground:", ground_depth_threshold)
 
+'''
+Axis Selection:
+Axis 1 (e.g., Y in many systems): Depth values increase from bottom to top.
+Axis 2 (e.g., Z in many systems): Depth values may increase in the opposite direction (top to bottom or front to back).
+Axis 3 : Left-To-Right.
+'''
+#If the axis direction is inverted, invert the depth values before clustering:
+if depth_axis == 2:  # Assuming Axis 2 needs to be inverted
+    depth_values = -depth_values
 # Map categories to ensure correct visualization
-road_points = point_coords[depth_values <= road_depth_threshold]
+road_points = point_coords[depth_values < road_depth_threshold]
+#no longer need the rest:
+'''
 wall_points = point_coords[
     (depth_values > road_depth_threshold) & (depth_values <= wall_depth_threshold)
 ]
 ground_points = point_coords[depth_values > wall_depth_threshold]
-
+'''
 
 # Create a tkinter window
 window = tk.Tk()
 window.title("Maze Segmentation")
 # Set the size of the window (width x height)
 window.geometry("400x300")  # Example size, adjust as needed
-
-# Function to visualize wall points
-def visualize_walls():
-    if len(wall_points) == 0:
-        print("No wall points to display.")
-    else:
-        wall_pcd = o3d.geometry.PointCloud()
-        wall_pcd.points = o3d.utility.Vector3dVector(wall_points)
-        o3d.visualization.draw_geometries([wall_pcd], window_name="Wall Points")
 
 # Function to visualize road points
 def visualize_roads():
@@ -84,24 +86,10 @@ def visualize_roads():
         road_pcd.points = o3d.utility.Vector3dVector(road_points)
         o3d.visualization.draw_geometries([road_pcd], window_name="Road Points")
 
-# Function to visualize ground points
-def visualize_ground():
-    if len(ground_points) == 0:
-        print("No ground points to display.")
-    else:
-        ground_pcd = o3d.geometry.PointCloud()
-        ground_pcd.points = o3d.utility.Vector3dVector(ground_points)
-        o3d.visualization.draw_geometries([ground_pcd], window_name="Ground Points")
 
 # Add buttons to the window
-btn_walls = Button(window, text="Show Walls", command=visualize_walls)
-btn_walls.pack(pady=20)  # Adjust padding as needed
-
-btn_roads = Button(window, text="Show Roads", command=visualize_roads)
+btn_roads = Button(window, text="Show cloud-points of walls", command=visualize_roads)
 btn_roads.pack(pady=20)  # Adjust padding as needed
-
-btn_ground = Button(window, text="Show Ground", command=visualize_ground)
-btn_ground.pack(pady=20)  # Adjust padding as needed
 
 # Run the tkinter main loop
 window.mainloop()
