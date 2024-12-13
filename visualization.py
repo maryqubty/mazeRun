@@ -31,15 +31,15 @@ def create_gui():
     # Set the size of the window (width x height)
     window.geometry("400x300")  # Example size, adjust as needed
 
-    btn_roads = Button(window, text="Select a Model", command=select_model)
-    btn_roads.pack(pady=20)  # Adjust padding as needed
+    btn_s = Button(window, text="Select a Model", command=select_model)
+    btn_s.pack(pady=20)  # Adjust padding as needed
 
-    btn_roads = Button(window, text="Proccess model", command=run_proccess)
-    btn_roads.pack(pady=20)  # Adjust padding as needed
+    btn_model = Button(window, text="Proccess model", command=run_proccess)
+    btn_model.pack(pady=20)  # Adjust padding as needed
 
     # Add buttons to the window
-    btn_roads = Button(window, text="Show cloud-points of walls", command=visualize_roads)
-    btn_roads.pack(pady=20)  # Adjust padding as needed
+    btn_walls = Button(window, text="Show cloud-points of walls", command=visualize_roads)
+    btn_walls.pack(pady=20)  # Adjust padding as needed
 
 
     # Run the tkinter main loop
