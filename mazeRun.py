@@ -44,11 +44,11 @@ from sklearn.cluster import KMeans
 depth_values_reshaped = depth_values.reshape(-1, 1)
 kmeans = KMeans(n_clusters=3, random_state=0).fit(depth_values_reshaped)
 cluster_centers = sorted(kmeans.cluster_centers_.flatten())
-road_depth_threshold, wall_depth_threshold, ground_depth_threshold = cluster_centers
+walls_depth_threshold, road_depth_threshold, ground_depth_threshold = cluster_centers
 
 print("Dynamically calculated thresholds:")
+print("walls:", walls_depth_threshold)
 print("Road:", road_depth_threshold)
-print("Wall:", wall_depth_threshold)
 print("Ground:", ground_depth_threshold)
 
 '''
@@ -61,14 +61,8 @@ Axis 3 : Left-To-Right.
 if depth_axis == 2:  # Assuming Axis 2 needs to be inverted
     depth_values = -depth_values
 # Map categories to ensure correct visualization
-road_points = point_coords[depth_values < road_depth_threshold]
-#no longer need the rest:
-'''
-wall_points = point_coords[
-    (depth_values > road_depth_threshold) & (depth_values <= wall_depth_threshold)
-]
-ground_points = point_coords[depth_values > wall_depth_threshold]
-'''
+wall_points = point_coords[depth_values < walls_depth_threshold]
+
 
 # Create a tkinter window
 window = tk.Tk()
@@ -78,17 +72,17 @@ window.geometry("400x300")  # Example size, adjust as needed
 
 # Function to visualize road points
 def visualize_roads():
-    if len(road_points) == 0:
+    if len(wall_points) == 0:
         print("No road points to display.")
     else:
-        road_pcd = o3d.geometry.PointCloud()
-        road_pcd.points = o3d.utility.Vector3dVector(road_points)
-        o3d.visualization.draw_geometries([road_pcd], window_name="Road Points")
+        walls_pcd = o3d.geometry.PointCloud()
+        walls_pcd.points = o3d.utility.Vector3dVector(wall_points)
+        o3d.visualization.draw_geometries([walls_pcd], window_name="Show cloud-points of walls")
 
 
 # Add buttons to the window
-btn_roads = Button(window, text="Show cloud-points of walls", command=visualize_roads)
-btn_roads.pack(pady=20)  # Adjust padding as needed
+btn_walls = Button(window, text="Show cloud-points of walls", command=visualize_roads)
+btn_walls.pack(pady=20)  # Adjust padding as needed
 
 # Run the tkinter main loop
 window.mainloop()
