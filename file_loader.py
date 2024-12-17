@@ -1,11 +1,11 @@
-import open3d as o3d 
+import open3d as o3d
 from tkinter import filedialog
 import globals
 
 def select_model():
     # Prompt user to select a PLY file
     file_path = filedialog.askopenfilename(
-        title="Select a PLY File", 
+        title="Select a PLY File",
         filetypes=[("PLY Files", "*.ply")]
     )
     if not file_path:
