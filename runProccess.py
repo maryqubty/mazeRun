@@ -12,56 +12,6 @@ def run_walls_proccess():
     return walls_points
 
 
-
-# /////////////////// Updated Process Function /////////////////////
-# def run_walls_proccess():
-    """
-    Main function to identify walls from the 3D point cloud, generate an occupancy grid,
-    and update global variables accordingly.
-    """
-    mazePcd = globals.mazePcd
-    if mazePcd is None:
-        print("Error: No point cloud data (mazePcd) found in globals. Exiting process.")
-        return None
-
-    # Step 1: Identify the depth axis and analyze points
-    depth_axis, point_coords, _ = depth_analysis.identify_depth_axis(mazePcd)
-
-    # Step 2: Downsample to reduce the number of points
-    print("Downsampling wall points for efficiency...")
-    downsampled_points = downsample_points(point_coords, voxel_size=0.1)
-
-    # Recalculate depth values for the downsampled points
-    downsampled_depth_values = downsampled_points[:, depth_axis]
-
-    # Step 3: Analyze depth distribution and map wall points
-    walls_depth_threshold = depth_analysis.analyze_depth_distribution(mazePcd, depth_axis)
-    walls_points = depth_analysis.map_walls_points(
-        depth_axis, walls_depth_threshold, downsampled_points, downsampled_depth_values
-    )
-
-    if walls_points.shape[0] == 0:
-        print("Warning: No wall points detected. Exiting process.")
-        return None
-
-    # Step 4: Generate the grid and update global variables
-    try:
-        grid = generate_grid_from_points(walls_points, grid_resolution=0.1)
-        globals.set_grid(grid)
-
-        # Update other global variables
-        globals.set_depth_axis(depth_axis)
-        globals.set_wall_points(walls_points)
-    except Exception as e:
-        print(f"Error generating occupancy grid: {e}")
-        return None
-
-    print("Walls process completed successfully.")
-    return walls_points
-
-
-# ///////////////// Updated Function //////////////////////////////
-# def generate_grid_from_points(wall_points, grid_resolution=0.1):
     """
     Generate a 3D occupancy grid representation from wall points.
 
