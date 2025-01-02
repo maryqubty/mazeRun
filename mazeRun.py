@@ -84,8 +84,65 @@ def visualize_roads():
 btn_walls = Button(window, text="Show cloud-points of walls", command=visualize_roads)
 btn_walls.pack(pady=20)  # Adjust padding as needed
 
+
+#second section of project:--------------------------------------------------------------------------
+#First let's get the start and exit point:
+# Global variables to store start and end points
+start_point = None
+end_point = None
+
+selected_points = []
+
+# Callback function to select points
+def pick_points(vis):
+    picked_indices = vis.get_picked_points()
+    if picked_indices:
+        point_coords = np.asarray(mazePcd.points)
+        for idx in picked_indices:
+            selected_points.append(point_coords[idx])
+        print(f"Selected points: {selected_points}")
+    return False
+
+# Function to visualize and select points
+def select_points():
+    global mazePcd, selected_points
+    selected_points = []  # Reset selected points
+    vis = o3d.visualization.VisualizerWithEditing()
+    vis.create_window(window_name="Select Points")
+    vis.add_geometry(mazePcd)
+    vis.run()  # Open the visualization window
+    vis.destroy_window()
+    if len(selected_points) >= 2:
+        print(f"Start point: {selected_points[0]}")
+        print(f"Exit point: {selected_points[1]}")
+    else:
+        print("Please select at least two points.")
+
+# Add buttons to the window
+btn_select_points = Button(window, text="Select Start and Exit Points", command=select_points)
+btn_select_points.pack(pady=20)
+
+
+
+'''
+# Step 3: Convert coordinates to grid indices
+start_coord, exit_coord = picked_coords[0], picked_coords[1]
+start_point = (
+    int((start_coord[0] - x_min) / grid_resolution),
+    int((start_coord[1] - y_min) / grid_resolution),
+    int((start_coord[2] - z_min) / grid_resolution)
+)
+exit_point = (
+    int((exit_coord[0] - x_min) / grid_resolution),
+    int((exit_coord[1] - y_min) / grid_resolution),
+    int((exit_coord[2] - z_min) / grid_resolution)
+)
+
+print("Start Point:", start_point)
+print("Exit Point:", exit_point)
+
+'''
 # Run the tkinter main loop
 window.mainloop()
-
 
 #end of the code for now
