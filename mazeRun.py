@@ -63,7 +63,6 @@ if depth_axis == 2:  # Assuming Axis 2 needs to be inverted
 # Map categories to ensure correct visualization
 wall_points = point_coords[depth_values < walls_depth_threshold]
 
-
 # Create a tkinter window
 window = tk.Tk()
 window.title("Maze Segmentation")
@@ -133,8 +132,8 @@ def create_grid(wall_points, grid_resolution, point_coords):
 
 # Visualize the Voxelized Grid
 def visualize_grid():
-    np.save("maze_grid.npy", maze_grid)
-    print("Grid saved to 'maze_grid.npy'. You can inspect it with numpy or other tools.")
+    np.savetxt("maze_grid.txt", maze_grid.reshape(-1, maze_grid.shape[2]), fmt="%d", delimiter=",")
+    print("Grid saved to 'maze_grid.txt'.")
 
     print("Visualizing the voxelized grid...")
     grid_points = []
@@ -212,46 +211,6 @@ def find_path(start, goal, maze_grid):
     path.reverse()
     return path
 
-#start point and exit point selection:
-# Function to select points manually through visualization
-start_point = None
-end_point = None
-# Function to visualize and allow user to pick points
-picked_points = []
-
-# Function to visualize and allow user to pick points
-def select_points():
-    global mazePcd, picked_points
-    vis = o3d.visualization.VisualizerWithEditing()
-    vis.create_window(window_name="Select Start and Exit Points")
-    vis.add_geometry(mazePcd)
-    print("Please select two points: Start and Exit. Press Q to confirm your selections.")
-    
-    # Run the interaction and check the state
-    vis.run()  # Interactive picking
-    print("Interaction completed. Attempting to retrieve picked points...")
-    
-    # Do not destroy the window for debugging
-    # vis.destroy_window()
-    
-    # Retrieve picked points
-    picked_indices = vis.get_picked_points()
-    print(f"Picked Indices: {picked_indices}")
-    
-    picked_points = [mazePcd.points[idx] for idx in picked_indices]
-    print(f"Picked Points: {picked_points}")
-    
-    if len(picked_points) >= 2:
-        start_point = np.array(picked_points[0])
-        end_point = np.array(picked_points[1])
-        print(f"Start Point: {start_point}")
-        print(f"Exit Point: {end_point}")
-    else:
-        print("Please select at least two points.")
-
-
-btn_select_points = Button(window, text="Select Start and Exit Points", command=select_points)
-btn_select_points.pack(pady=20)
 
 #main:
 #Create grid and add buffer
@@ -262,7 +221,7 @@ maze_grid = add_wall_buffer(maze_grid)
 
 #this next part of code is gonna be changed to be dynamically chosen for exh different maze model by clicking on the start and exit point
 # Step 3: Specify start and exit points (in grid indices)
-start_point = (10, 10, 10)  # Example start point (adjust as needed)
+start_point = (0, 0, 0)  # Example start point (adjust as needed)
 print("Start Point:", start_point)
 exit_point = (maze_grid.shape[0] - 2, maze_grid.shape[1] - 2, maze_grid.shape[2] - 2)  # Example exit point
 print("Exit Point:", exit_point)
