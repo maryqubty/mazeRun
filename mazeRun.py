@@ -157,8 +157,6 @@ def visualize_grid():
 btn_visualize_grid = Button(window, text="Visualize Grid", command=visualize_grid)
 btn_visualize_grid.pack(pady=20)
 
-
-
 #Add a Buffer Around Walls
 #Add a small buffer zone around blocked cells to account for wall thickness.
 from scipy.ndimage import binary_dilation
@@ -168,6 +166,52 @@ def add_wall_buffer(maze_grid):
     return binary_dilation(maze_grid, structure=np.ones((3, 3, 3)))
 
 
+#Implement Pathfinding:
+#Use a pathfinding algorithm A* (A-Star)
+from queue import PriorityQueue
+
+def heuristic(a, b):
+    return np.linalg.norm(np.array(a) - np.array(b))
+
+def find_path(start, goal, maze_grid):
+    print("Finding path...")
+    queue = PriorityQueue()
+    queue.put((0, start))
+    came_from = {}
+    cost_so_far = {}
+    came_from[start] = None
+    cost_so_far[start] = 0
+
+    while not queue.empty():
+        _, current = queue.get()
+
+        if current == goal:
+            break
+
+        for dx, dy, dz in [(1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)]:
+            next_cell = (current[0] + dx, current[1] + dy, current[2] + dz)
+            if (
+                0 <= next_cell[0] < maze_grid.shape[0] and
+                0 <= next_cell[1] < maze_grid.shape[1] and
+                0 <= next_cell[2] < maze_grid.shape[2] and
+                maze_grid[next_cell] == 0
+            ):
+                new_cost = cost_so_far[current] + 1
+                if next_cell not in cost_so_far or new_cost < cost_so_far[next_cell]:
+                    cost_so_far[next_cell] = new_cost
+                    priority = new_cost + heuristic(goal, next_cell)
+                    queue.put((priority, next_cell))
+                    came_from[next_cell] = current
+
+    # Reconstruct the path
+    path = []
+    current = goal
+    while current is not None:
+        path.append(current)
+        current = came_from[current]
+    path.reverse()
+    return path
+
 
 #main:
 #Create grid and add buffer
@@ -176,6 +220,27 @@ maze_grid = create_grid(wall_points, grid_resolution, point_coords)
 maze_grid = add_wall_buffer(maze_grid)
 
 
+#this next part of code is gonna be changed to be dynamically chosen for exh different maze model by clicking on the start and exit point
+# Step 3: Specify start and exit points (in grid indices)
+start_point = (10, 10, 10)  # Example start point (adjust as needed)
+print("Start Point:", start_point)
+exit_point = (maze_grid.shape[0] - 2, maze_grid.shape[1] - 2, maze_grid.shape[2] - 2)  # Example exit point
+print("Exit Point:", exit_point)
+
+# Step 4: Find the path
+#path = find_path(start_point, exit_point, maze_grid)
+
+def find_and_visualize_path():
+    path_coords = find_path(start_point, exit_point, maze_grid)
+    print("Path found with", len(path_coords), "points.")
+    print("Path Coordinates:", path_coords)
+    # Visualize the path
+    path_pcd = o3d.geometry.PointCloud()
+    path_pcd.points = o3d.utility.Vector3dVector(path_coords)
+    o3d.visualization.draw_geometries([mazePcd, path_pcd], window_name="Path Visualization")
+
+btn_path = Button(window, text="Find Path", command=find_and_visualize_path)
+btn_path.pack(pady=20)
 
 # Run the tkinter main loop
 window.mainloop()
