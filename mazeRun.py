@@ -212,6 +212,46 @@ def find_path(start, goal, maze_grid):
     path.reverse()
     return path
 
+#start point and exit point selection:
+# Function to select points manually through visualization
+start_point = None
+end_point = None
+# Function to visualize and allow user to pick points
+picked_points = []
+
+# Function to visualize and allow user to pick points
+def select_points():
+    global mazePcd, picked_points
+    vis = o3d.visualization.VisualizerWithEditing()
+    vis.create_window(window_name="Select Start and Exit Points")
+    vis.add_geometry(mazePcd)
+    print("Please select two points: Start and Exit. Press Q to confirm your selections.")
+    
+    # Run the interaction and check the state
+    vis.run()  # Interactive picking
+    print("Interaction completed. Attempting to retrieve picked points...")
+    
+    # Do not destroy the window for debugging
+    # vis.destroy_window()
+    
+    # Retrieve picked points
+    picked_indices = vis.get_picked_points()
+    print(f"Picked Indices: {picked_indices}")
+    
+    picked_points = [mazePcd.points[idx] for idx in picked_indices]
+    print(f"Picked Points: {picked_points}")
+    
+    if len(picked_points) >= 2:
+        start_point = np.array(picked_points[0])
+        end_point = np.array(picked_points[1])
+        print(f"Start Point: {start_point}")
+        print(f"Exit Point: {end_point}")
+    else:
+        print("Please select at least two points.")
+
+
+btn_select_points = Button(window, text="Select Start and Exit Points", command=select_points)
+btn_select_points.pack(pady=20)
 
 #main:
 #Create grid and add buffer
