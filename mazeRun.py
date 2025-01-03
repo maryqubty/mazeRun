@@ -156,6 +156,38 @@ def visualize_grid():
 btn_visualize_grid = Button(window, text="Visualize Grid", command=visualize_grid)
 btn_visualize_grid.pack(pady=20)
 
+
+def visualize_2d_grid():
+    print("Visualizing the 2D grid...")
+
+    # Flatten the 3D grid along the depth axis to create a 2D representation
+    maze_grid_2d = np.any(maze_grid, axis=depth_axis).astype(int)
+    
+    # Generate 2D grid points for visualization
+    grid_points_2d = []
+    x_min, y_min = point_coords[:, 0].min(), point_coords[:, 1].min()
+    for x in range(maze_grid_2d.shape[0]):
+        for y in range(maze_grid_2d.shape[1]):
+            if maze_grid_2d[x, y] == 1:  # If cell is occupied
+                grid_points_2d.append([
+                    x_min + x * grid_resolution,
+                    y_min + y * grid_resolution,
+                ])
+    
+    # Convert 2D grid points to a PointCloud
+    grid_pcd_2d = o3d.geometry.PointCloud()
+    grid_pcd_2d.points = o3d.utility.Vector3dVector(
+        np.array([[point[0], point[1], 0] for point in grid_points_2d])  # Set depth to 0
+    )
+    
+    # Visualize the 2D grid as points
+    o3d.visualization.draw_geometries([grid_pcd_2d], window_name="2D Grid Visualization")
+
+# Add 2D Grid Visualization Button
+btn_visualize_2d_grid = Button(window, text="Visualize 2D Grid", command=visualize_2d_grid)
+btn_visualize_2d_grid.pack(pady=20)
+
+
 #Add a Buffer Around Walls
 #Add a small buffer zone around blocked cells to account for wall thickness.
 from scipy.ndimage import binary_dilation
@@ -164,16 +196,27 @@ def add_wall_buffer(maze_grid):
     print("Adding wall buffer...")
     return binary_dilation(maze_grid, structure=np.ones((3, 3, 3)))
 
-
 #Implement Pathfinding:
 #Use a pathfinding algorithm A* (A-Star)
 from queue import PriorityQueue
 
+# Heuristic function
 def heuristic(a, b):
     return np.linalg.norm(np.array(a) - np.array(b))
 
-def find_path(start, goal, maze_grid):
-    print("Finding path...")
+# Pathfinding function
+def find_path_2d(start3d, goal3d, maze_grid_2d, depth_axis):
+    # Step 1: Convert 3D start and goal points to 2D grid indices
+    grid_origin = np.min(point_coords, axis=0)
+    start_2d = np.delete(start3d, depth_axis)  # Drop the depth axis
+    goal_2d = np.delete(goal3d, depth_axis)    # Drop the depth axis
+
+    start = tuple(((start_2d - grid_origin[np.delete(range(3), depth_axis)]) / grid_resolution).astype(int))
+    goal = tuple(((goal_2d - grid_origin[np.delete(range(3), depth_axis)]) / grid_resolution).astype(int))
+    
+    print("Start (2D):", start)
+    print("Goal (2D):", goal)
+
     queue = PriorityQueue()
     queue.put((0, start))
     came_from = {}
@@ -187,13 +230,12 @@ def find_path(start, goal, maze_grid):
         if current == goal:
             break
 
-        for dx, dy, dz in [(1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)]:
-            next_cell = (current[0] + dx, current[1] + dy, current[2] + dz)
+        for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+            next_cell = (current[0] + dx, current[1] + dy)
             if (
-                0 <= next_cell[0] < maze_grid.shape[0] and
-                0 <= next_cell[1] < maze_grid.shape[1] and
-                0 <= next_cell[2] < maze_grid.shape[2] and
-                maze_grid[next_cell] == 0
+                0 <= next_cell[0] < maze_grid_2d.shape[0] and
+                0 <= next_cell[1] < maze_grid_2d.shape[1] and
+                maze_grid_2d[next_cell] == 0
             ):
                 new_cost = cost_so_far[current] + 1
                 if next_cell not in cost_so_far or new_cost < cost_so_far[next_cell]:
@@ -202,14 +244,18 @@ def find_path(start, goal, maze_grid):
                     queue.put((priority, next_cell))
                     came_from[next_cell] = current
 
-    # Reconstruct the path
     path = []
     current = goal
     while current is not None:
         path.append(current)
+        if current not in came_from:
+            print(f"Path reconstruction failed at {current}. Partial path: {path}")
+            break
         current = came_from[current]
     path.reverse()
     return path
+
+
 
 
 #main:
@@ -217,6 +263,10 @@ def find_path(start, goal, maze_grid):
 grid_resolution = 0.5  # Adjust as needed
 maze_grid = create_grid(wall_points, grid_resolution, point_coords)
 maze_grid = add_wall_buffer(maze_grid)
+
+# Collapse the grid along the depth axis to create a 2D grid
+maze_grid_2d = np.any(maze_grid, axis=depth_axis).astype(int)
+
 
 
 #this next part of code is gonna be changed to be dynamically chosen for exh different maze model by clicking on the start and exit point
@@ -228,28 +278,37 @@ print("Exit Point:", exit_point)
 
 # Step 4: Find the path
 #path = find_path(start_point, exit_point, maze_grid)
-
 def find_and_visualize_path():
-    # Step 1: Find the path in grid indices
-    path_indices = find_path(start_point, exit_point, maze_grid)
-    print("Path found with", len(path_indices), "points.")
-    print("Path Indices:", path_indices)
+    # Step 1: Find the path in grid indices (2D)
+    path_indices_2d = find_path_2d(start_point, exit_point, maze_grid_2d, depth_axis)
+    print("Path found with", len(path_indices_2d), "points.")
+    print("Path Indices (2D):", path_indices_2d)
 
-    # Step 2: Convert path grid indices to real-world coordinates
+    # Step 2: Convert path 2D grid indices back to 3D real-world coordinates
     path_coords = []
     x_min, y_min, z_min = point_coords[:, 0].min(), point_coords[:, 1].min(), point_coords[:, 2].min()
-    for idx in path_indices:
-        x, y, z = idx
-        real_x = x_min + x * grid_resolution
-        real_y = y_min + y * grid_resolution
-        real_z = z_min + z * grid_resolution
-        path_coords.append([real_x, real_y, real_z])
+    max_depth = point_coords[:, depth_axis].max()  # Get the maximum value along the depth axis
+    max_depth_idx = int((max_depth - [x_min, y_min, z_min][depth_axis]) / grid_resolution)
+
+    for idx_2d in path_indices_2d:
+        idx_3d = [0, 0, 0]  # Initialize a 3D index
+        idx_3d[depth_axis] = max_depth_idx  # Set the depth axis to the max depth index
+
+        # Assign the 2D indices to the other two axes
+        axes_2d = [i for i in range(3) if i != depth_axis]
+        idx_3d[axes_2d[0]], idx_3d[axes_2d[1]] = idx_2d
+
+        real_coords = [
+            x_min + idx_3d[0] * grid_resolution,
+            y_min + idx_3d[1] * grid_resolution,
+            z_min + idx_3d[2] * grid_resolution,
+        ]
+        path_coords.append(real_coords)
     
-    # Step 3: Filter out the points that are part of the walls (i.e., only keep open cells)
-    # The path should be composed only of open spaces
+    # Step 3: Convert path_coords to numpy array for visualization
     path_coords = np.array(path_coords)
 
-    # Step 4: Visualize the walls and path
+    # Step 4: Visualize walls and path
     # Walls visualization (point cloud)
     walls_pcd = o3d.geometry.PointCloud()
     walls_pcd.points = o3d.utility.Vector3dVector(wall_points)
@@ -258,13 +317,14 @@ def find_and_visualize_path():
     path_pcd = o3d.geometry.PointCloud()
     path_pcd.points = o3d.utility.Vector3dVector(path_coords)
 
-    # Visualizing only the path (open space) and wall points
+    # Visualize the path and walls
     o3d.visualization.draw_geometries(
         [walls_pcd, path_pcd],
         window_name="Path Visualization in Open Spaces",
         width=800,
         height=600
     )
+
 
 
 btn_path = Button(window, text="Find Path", command=find_and_visualize_path)
