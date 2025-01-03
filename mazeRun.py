@@ -205,17 +205,7 @@ def heuristic(a, b):
     return np.linalg.norm(np.array(a) - np.array(b))
 
 # Pathfinding function
-def find_path_2d(start3d, goal3d, maze_grid_2d, depth_axis):
-    # Step 1: Convert 3D start and goal points to 2D grid indices
-    grid_origin = np.min(point_coords, axis=0)
-    start_2d = np.delete(start3d, depth_axis)  # Drop the depth axis
-    goal_2d = np.delete(goal3d, depth_axis)    # Drop the depth axis
-
-    start = tuple(((start_2d - grid_origin[np.delete(range(3), depth_axis)]) / grid_resolution).astype(int))
-    goal = tuple(((goal_2d - grid_origin[np.delete(range(3), depth_axis)]) / grid_resolution).astype(int))
-    
-    print("Start (2D):", start)
-    print("Goal (2D):", goal)
+def find_path_2d(start, goal, maze_grid_2d, depth_axis):
 
     queue = PriorityQueue()
     queue.put((0, start))
@@ -267,14 +257,14 @@ maze_grid = add_wall_buffer(maze_grid)
 # Collapse the grid along the depth axis to create a 2D grid
 maze_grid_2d = np.any(maze_grid, axis=depth_axis).astype(int)
 
-
-
-#this next part of code is gonna be changed to be dynamically chosen for exh different maze model by clicking on the start and exit point
-# Step 3: Specify start and exit points (in grid indices)
-start_point = (0, 0, 0)  # Example start point (adjust as needed)
-print("Start Point:", start_point)
-exit_point = (maze_grid.shape[0] - 2, maze_grid.shape[1] - 2, maze_grid.shape[2] - 2)  # Example exit point
-print("Exit Point:", exit_point)
+# Step 3: Specify start and exit points (in grid indices) (hardcoded for now):
+# Find coordinates where the grid value is 0 (walkable)
+walkable_points = np.column_stack(np.where(maze_grid_2d == 0))
+# Pick the first and last walkable points
+start_point = tuple(walkable_points[1000])  
+exit_point = tuple(walkable_points[-1000])  
+print("Start Point (2D):", start_point)
+print("Exit Point (2D):", exit_point)
 
 # Step 4: Find the path
 #path = find_path(start_point, exit_point, maze_grid)
