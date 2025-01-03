@@ -307,6 +307,9 @@ def find_and_visualize_path():
     path_pcd = o3d.geometry.PointCloud()
     path_pcd.points = o3d.utility.Vector3dVector(path_coords)
 
+    # Color the path black (RGB: [0, 0, 0])
+    path_pcd.colors = o3d.utility.Vector3dVector(np.zeros_like(path_coords))  # Set all colors to black
+
     # Visualize the path and walls
     o3d.visualization.draw_geometries(
         [walls_pcd, path_pcd],
