@@ -230,13 +230,42 @@ print("Exit Point:", exit_point)
 #path = find_path(start_point, exit_point, maze_grid)
 
 def find_and_visualize_path():
-    path_coords = find_path(start_point, exit_point, maze_grid)
-    print("Path found with", len(path_coords), "points.")
-    print("Path Coordinates:", path_coords)
-    # Visualize the path
+    # Step 1: Find the path in grid indices
+    path_indices = find_path(start_point, exit_point, maze_grid)
+    print("Path found with", len(path_indices), "points.")
+    print("Path Indices:", path_indices)
+
+    # Step 2: Convert path grid indices to real-world coordinates
+    path_coords = []
+    x_min, y_min, z_min = point_coords[:, 0].min(), point_coords[:, 1].min(), point_coords[:, 2].min()
+    for idx in path_indices:
+        x, y, z = idx
+        real_x = x_min + x * grid_resolution
+        real_y = y_min + y * grid_resolution
+        real_z = z_min + z * grid_resolution
+        path_coords.append([real_x, real_y, real_z])
+    
+    # Step 3: Filter out the points that are part of the walls (i.e., only keep open cells)
+    # The path should be composed only of open spaces
+    path_coords = np.array(path_coords)
+
+    # Step 4: Visualize the walls and path
+    # Walls visualization (point cloud)
+    walls_pcd = o3d.geometry.PointCloud()
+    walls_pcd.points = o3d.utility.Vector3dVector(wall_points)
+
+    # Path visualization (point cloud)
     path_pcd = o3d.geometry.PointCloud()
     path_pcd.points = o3d.utility.Vector3dVector(path_coords)
-    o3d.visualization.draw_geometries([mazePcd, path_pcd], window_name="Path Visualization")
+
+    # Visualizing only the path (open space) and wall points
+    o3d.visualization.draw_geometries(
+        [walls_pcd, path_pcd],
+        window_name="Path Visualization in Open Spaces",
+        width=800,
+        height=600
+    )
+
 
 btn_path = Button(window, text="Find Path", command=find_and_visualize_path)
 btn_path.pack(pady=20)
