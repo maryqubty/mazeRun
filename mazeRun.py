@@ -199,8 +199,9 @@ def visualize_2d_grid():
     if selected_indices:
         selected_idx = selected_indices[-1]  # Make sure to get the last selected point
         selected_point = np.asarray(grid_pcd_2d.points)[selected_idx]
-        # Flatten the selected point along the depth axis
-        selected_point_2d = np.delete(selected_point, depth_axis)
+         # Extract the 2D point by ignoring the z coordinate (removing depth of grid)
+        selected_point_2d = selected_point[:2]  # Just take the first two elements (x, y)
+        selected_point_2d = np.round(selected_point_2d )   # Round the values to the nearest integer
         print(f"2D Point Selected: {selected_point_2d}")
         s_point = tuple(selected_point_2d) # Store the selected point as a tuple for pathfinding later
     else:
@@ -266,7 +267,7 @@ def heuristic(a, b):
 
 # Pathfinding function
 def find_path_2d(start, goal, maze_grid_2d, depth_axis):
-
+    print("find_path_2d... start = {start}, goal = {goal}")
     queue = PriorityQueue()
     queue.put((0, start))
     came_from = {}
