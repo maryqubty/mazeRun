@@ -67,7 +67,7 @@ wall_points = point_coords[depth_values < walls_depth_threshold]
 window = tk.Tk()
 window.title("Maze Segmentation")
 # Set the size of the window (width x height)
-window.geometry("400x300")  # Example size, adjust as needed
+window.geometry("400x500")  # Example size, adjust as needed
 
 # Function to visualize road points
 def visualize_roads():
@@ -156,36 +156,96 @@ def visualize_grid():
 btn_visualize_grid = Button(window, text="Visualize Grid", command=visualize_grid)
 btn_visualize_grid.pack(pady=20)
 
-
+s_point= None # Global variable to store the last selected point
 def visualize_2d_grid():
+    global s_point
     print("Visualizing the 2D grid...")
 
     # Flatten the 3D grid along the depth axis to create a 2D representation
     maze_grid_2d = np.any(maze_grid, axis=depth_axis).astype(int)
     
-    # Generate 2D grid points for visualization
+    # Generate grid points (both walls and walkable)
     grid_points_2d = []
+    colors = []
     x_min, y_min = point_coords[:, 0].min(), point_coords[:, 1].min()
     for x in range(maze_grid_2d.shape[0]):
         for y in range(maze_grid_2d.shape[1]):
-            if maze_grid_2d[x, y] == 1:  # If cell is occupied
-                grid_points_2d.append([
-                    x_min + x * grid_resolution,
-                    y_min + y * grid_resolution,
-                ])
+            grid_points_2d.append([x_min + x * grid_resolution, y_min + y * grid_resolution])
+            # Color the walls black and the paths white 
+            if maze_grid_2d[x, y] == 1:  # Wall
+                colors.append([0, 0, 0])  # Black
+            else:  # Path (walkable)
+                colors.append([1, 1, 1])  # White
     
     # Convert 2D grid points to a PointCloud
     grid_pcd_2d = o3d.geometry.PointCloud()
     grid_pcd_2d.points = o3d.utility.Vector3dVector(
         np.array([[point[0], point[1], 0] for point in grid_points_2d])  # Set depth to 0
     )
-    
+    grid_pcd_2d.colors = o3d.utility.Vector3dVector(np.array(colors))  # Assign colors
+
     # Visualize the 2D grid as points
-    o3d.visualization.draw_geometries([grid_pcd_2d], window_name="2D Grid Visualization")
+    #o3d.visualization.draw_geometries([grid_pcd_2d], window_name="2D Grid Visualization")
+       
+    # Use Open3D's VisualizerWithEditing for interactive selection
+    vis = o3d.visualization.VisualizerWithEditing()
+    vis.create_window(window_name=f"Select Point")
+    vis.add_geometry(grid_pcd_2d)
+    vis.run()
+    vis.destroy_window()
+
+    # Get the selected points
+    selected_indices = vis.get_picked_points()
+    if selected_indices:
+        selected_idx = selected_indices[-1]  # Make sure to get the last selected point
+        selected_point = np.asarray(grid_pcd_2d.points)[selected_idx]
+        # Flatten the selected point along the depth axis
+        selected_point_2d = np.delete(selected_point, depth_axis)
+        print(f"2D Point Selected: {selected_point_2d}")
+        s_point = tuple(selected_point_2d) # Store the selected point as a tuple for pathfinding later
+    else:
+        print(f"No point selected.")
+        s_point = None
 
 # Add 2D Grid Visualization Button
 btn_visualize_2d_grid = Button(window, text="Visualize 2D Grid", command=visualize_2d_grid)
 btn_visualize_2d_grid.pack(pady=20)
+
+
+# Function to select the start point
+def select_start_point():
+    global s_point, start_point
+    #call the function to visualize the 2D grid and select a point
+    print("Select the start point...")
+    visualize_2d_grid()
+    #check if point s valid and walkable:
+    if s_point is not None and s_point in walkable_points: 
+        print(f"Start Point Selected: {s_point}")
+        start_point = s_point
+    else:
+        print("No start point selected.")
+    s_point = None # Reset the selected point
+
+# Add button to select start point
+btn_select_start = Button(window, text="Select Start Point", command=select_start_point)
+btn_select_start.pack(pady=20)
+
+
+# Function to select the exit point
+def select_exit_point():
+    global s_point, exit_point
+    print("Select the exit point...")
+    visualize_2d_grid()
+    if s_point is not None and s_point in walkable_points:
+        print(f"Exit Point Selected: {s_point}")
+        exit_point = s_point # Select the last point
+    else:
+        print("No exit point selected.")
+    s_point = None  # Reset the selected point
+
+# Add button to select exit point
+btn_select_exit = Button(window, text="Select Exit Point", command=select_exit_point)
+btn_select_exit.pack(pady=20)
 
 
 #Add a Buffer Around Walls
@@ -257,12 +317,14 @@ maze_grid = add_wall_buffer(maze_grid)
 # Collapse the grid along the depth axis to create a 2D grid
 maze_grid_2d = np.any(maze_grid, axis=depth_axis).astype(int)
 
-# Step 3: Specify start and exit points (in grid indices) (hardcoded for now):
+
+# Step 3: Specify start and exit points (in grid indices) (default values):
 # Find coordinates where the grid value is 0 (walkable)
 walkable_points = np.column_stack(np.where(maze_grid_2d == 0))
+blocked_points = np.column_stack(np.where(maze_grid_2d == 1))
 # Pick the first and last walkable points
 start_point = tuple(walkable_points[1000])  
-exit_point = tuple(walkable_points[-1000])  
+exit_point = tuple(walkable_points[-1000])
 print("Start Point (2D):", start_point)
 print("Exit Point (2D):", exit_point)
 
