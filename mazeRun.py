@@ -129,6 +129,17 @@ def create_grid(wall_points, grid_resolution, point_coords):
 
     return maze_grid
 
+# Function to get the grid index of a point
+def get_grid_indice(point, grid_resolution, point_coords):
+    x_min = point_coords[:, 0].min()
+    y_min = point_coords[:, 1].min()
+    z_min = point_coords[:, 2].min()
+    x_idx = int((point[0] - x_min) / grid_resolution)
+    y_idx = int((point[1] - y_min) / grid_resolution)
+    z_idx = int((point[2] - z_min) / grid_resolution)
+    point_indice = tuple([x_idx, y_idx, z_idx])
+    return point_indice
+
 
 # Visualize the Voxelized Grid
 def visualize_grid():
@@ -156,7 +167,7 @@ def visualize_grid():
 btn_visualize_grid = Button(window, text="Visualize Grid", command=visualize_grid)
 btn_visualize_grid.pack(pady=20)
 
-s_point= None # Global variable to store the last selected point
+# Function to visualize the 2D grid and select a point
 def visualize_2d_grid():
     global s_point
     print("Visualizing the 2D grid...")
@@ -213,16 +224,49 @@ btn_visualize_2d_grid = Button(window, text="Visualize 2D Grid", command=visuali
 btn_visualize_2d_grid.pack(pady=20)
 
 
+s_point = None  # Global variable to store the last selected point
+def visualize_point_cloud_with_selection():
+    global s_point
+    print("Visualizing the point cloud with interactive point selection...")
+
+    # Use Open3D's VisualizerWithEditing for interactive selection
+    vis = o3d.visualization.VisualizerWithEditing()
+    vis.create_window(window_name="Select Points in Point Cloud")
+    vis.add_geometry(mazePcd)  # Use the point cloud directly
+    vis.run()
+    vis.destroy_window()
+
+    # Get the selected points
+    selected_indices = vis.get_picked_points()
+    if selected_indices:
+        selected_idx = selected_indices[-1]  # Use the last selected point
+        selected_point = np.asarray(mazePcd.points)[selected_idx]
+        print(f"Point Cloud Point Selected: {selected_point}")
+        s_point = selected_point  # Store the selected point for pathfinding later
+    else:
+        print("No point selected.")
+        s_point = None
+
+# Add Point Cloud Visualization Button
+btn_visualize_point_cloud = Button(window, text="Visualize Point Cloud", command=visualize_point_cloud_with_selection)
+btn_visualize_point_cloud.pack(pady=20)
+
+
+
 # Function to select the start point
 def select_start_point():
     global s_point, start_point
-    #call the function to visualize the 2D grid and select a point
+    #call the function to visualize the 3D grid and select a point
     print("Select the start point...")
-    visualize_2d_grid()
+    visualize_point_cloud_with_selection()
+    # Remove the depth axis coordinate from the selected point
+    indice= get_grid_indice(s_point, grid_resolution, point_coords)
+    selected_point_2d = np.delete(indice, depth_axis)
+
     #check if point s valid and walkable:
-    if s_point is not None and s_point in walkable_points: 
-        print(f"Start Point Selected: {s_point}")
-        start_point = s_point
+    if selected_point_2d is not None and selected_point_2d in walkable_points: 
+        print(f"Start Point Selected: {selected_point_2d}")
+        start_point = tuple(selected_point_2d)
     else:
         print("No start point selected.")
     s_point = None # Reset the selected point
