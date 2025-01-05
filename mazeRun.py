@@ -103,6 +103,7 @@ Initialize a binary map where:
 -> 0 represents an open cell (no wall points).
 '''
 
+'''
 def create_grid(wall_points, grid_resolution, point_coords):
     print("Creating grid...")
     # Step 1: Define grid parameters
@@ -128,6 +129,7 @@ def create_grid(wall_points, grid_resolution, point_coords):
     print(f"Number of Open Cells: {np.sum(maze_grid == 0)}")
 
     return maze_grid
+'''
 
 # Function to get the grid index of a point
 def get_grid_indice(point, grid_resolution, point_coords):
@@ -140,7 +142,7 @@ def get_grid_indice(point, grid_resolution, point_coords):
     point_indice = tuple([x_idx, y_idx, z_idx])
     return point_indice
 
-
+'''
 # Visualize the Voxelized Grid
 def visualize_grid():
     np.savetxt("maze_grid.txt", maze_grid.reshape(-1, maze_grid.shape[2]), fmt="%d", delimiter=",")
@@ -166,6 +168,7 @@ def visualize_grid():
 # Add Grid Visualization Button
 btn_visualize_grid = Button(window, text="Visualize Grid", command=visualize_grid)
 btn_visualize_grid.pack(pady=20)
+'''
 
 # Function to visualize the 2D grid and select a point
 def visualize_2d_grid():
@@ -173,7 +176,7 @@ def visualize_2d_grid():
     print("Visualizing the 2D grid...")
 
     # Flatten the 3D grid along the depth axis to create a 2D representation
-    maze_grid_2d = np.any(maze_grid, axis=depth_axis).astype(int)
+    #maze_grid_2d = np.any(maze_grid, axis=depth_axis).astype(int)
     
     # Generate grid points (both walls and walkable)
     grid_points_2d = []
@@ -296,7 +299,7 @@ def select_exit_point():
 btn_select_exit = Button(window, text="Select Exit Point", command=select_exit_point)
 btn_select_exit.pack(pady=20)
 
-
+'''
 #Add a Buffer Around Walls
 #Add a small buffer zone around blocked cells to account for wall thickness.
 from scipy.ndimage import binary_dilation
@@ -304,6 +307,7 @@ from scipy.ndimage import binary_dilation
 def add_wall_buffer(maze_grid):
     print("Adding wall buffer...")
     return binary_dilation(maze_grid, structure=np.ones((3, 3, 3)))
+'''
 
 #Implement Pathfinding:
 #Use a pathfinding algorithm A* (A-Star)
@@ -357,7 +361,7 @@ def find_path_2d(start, goal, maze_grid_2d, depth_axis):
 
 
 
-#main:
+'''
 #Create grid and add buffer
 grid_resolution = 0.5  # Adjust as needed
 maze_grid = create_grid(wall_points, grid_resolution, point_coords)
@@ -365,6 +369,47 @@ maze_grid = add_wall_buffer(maze_grid)
 
 # Collapse the grid along the depth axis to create a 2D grid
 maze_grid_2d = np.any(maze_grid, axis=depth_axis).astype(int)
+'''
+
+from scipy.ndimage import binary_dilation
+
+def create_2d_grid(wall_points, grid_resolution, point_coords, depth_axis):
+    print("Creating 2D grid...")
+
+    # Step 1: Define grid parameters for 2D (ignoring depth)
+    axes = [i for i in range(3) if i != depth_axis]
+    x_axis, y_axis = axes
+    x_min, x_max = point_coords[:, x_axis].min(), point_coords[:, x_axis].max()
+    y_min, y_max = point_coords[:, y_axis].min(), point_coords[:, y_axis].max()
+
+    # Determine 2D grid dimensions
+    x_range = int((x_max - x_min) / grid_resolution)
+    y_range = int((y_max - y_min) / grid_resolution)
+    maze_grid_2d = np.zeros((x_range, y_range), dtype=int)
+
+    # Mark cells as blocked if they contain wall points
+    for point in wall_points:
+        x_idx = int((point[x_axis] - x_min) / grid_resolution)
+        y_idx = int((point[y_axis] - y_min) / grid_resolution)
+        if 0 <= x_idx < x_range and 0 <= y_idx < y_range:
+            maze_grid_2d[x_idx, y_idx] = 1
+
+    print(f"2D Grid Dimensions: {maze_grid_2d.shape}")
+    print(f"Number of Walls: {np.sum(maze_grid_2d == 1)}")
+    print(f"Number of Open Cells: {np.sum(maze_grid_2d == 0)}")
+
+    return maze_grid_2d
+
+def add_wall_buffer_2d(maze_grid_2d):
+    print("Adding wall buffer to 2D grid...")
+    return binary_dilation(maze_grid_2d, structure=np.ones((3, 3))).astype(int)
+
+# Example usage:
+grid_resolution = 0.5  # Adjust as needed
+
+maze_grid_2d = create_2d_grid(wall_points, grid_resolution, point_coords, depth_axis)
+maze_grid_2d = add_wall_buffer_2d(maze_grid_2d)
+
 
 
 # Step 3: Specify start and exit points (in grid indices) (default values):
@@ -372,8 +417,8 @@ maze_grid_2d = np.any(maze_grid, axis=depth_axis).astype(int)
 walkable_points = np.column_stack(np.where(maze_grid_2d == 0))
 blocked_points = np.column_stack(np.where(maze_grid_2d == 1))
 # Pick the first and last walkable points
-start_point = tuple(walkable_points[1000])  
-exit_point = tuple(walkable_points[-1000])
+start_point = (0,0) 
+exit_point = (0,0)
 print("Start Point (2D):", start_point)
 print("Exit Point (2D):", exit_point)
 
