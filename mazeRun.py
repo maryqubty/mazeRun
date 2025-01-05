@@ -38,6 +38,10 @@ np.savetxt("sorted_depth_values.txt", np.sort(mazeDepth), delimiter=",")
 depth_values = np.asarray(mazePcd.points)[:, depth_axis]
 min_depth, max_depth = np.min(depth_values), np.max(depth_values)
 
+#If the axis direction is inverted, invert the depth values before clustering:
+if depth_axis == 2:  # Assuming Axis 2 needs to be inverted
+    depth_values = -depth_values
+    
 #Instead of fixed percentiles, analyze the depth distribution dynamically: Use clustering with KMeans to segment depth dynamically
 from sklearn.cluster import KMeans
 
@@ -57,11 +61,9 @@ Axis 1 (e.g., Y in many systems): Depth values increase from bottom to top.
 Axis 2 (e.g., Z in many systems): Depth values may increase in the opposite direction (top to bottom or front to back).
 Axis 3 : Left-To-Right.
 '''
-#If the axis direction is inverted, invert the depth values before clustering:
-if depth_axis == 2:  # Assuming Axis 2 needs to be inverted
-    depth_values = -depth_values
+
 # Map categories to ensure correct visualization
-wall_points = point_coords[depth_values < walls_depth_threshold]
+wall_points = point_coords[depth_values < road_depth_threshold]
 
 # Create a tkinter window
 window = tk.Tk()
