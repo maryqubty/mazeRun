@@ -38,9 +38,6 @@ np.savetxt("sorted_depth_values.txt", np.sort(mazeDepth), delimiter=",")
 depth_values = np.asarray(mazePcd.points)[:, depth_axis]
 min_depth, max_depth = np.min(depth_values), np.max(depth_values)
 
-#If the axis direction is inverted, invert the depth values before clustering:
-if depth_axis == 2:  # Assuming Axis 2 needs to be inverted
-    depth_values = -depth_values
     
 #Instead of fixed percentiles, analyze the depth distribution dynamically: Use clustering with KMeans to segment depth dynamically
 from sklearn.cluster import KMeans
@@ -61,9 +58,12 @@ Axis 1 (e.g., Y in many systems): Depth values increase from bottom to top.
 Axis 2 (e.g., Z in many systems): Depth values may increase in the opposite direction (top to bottom or front to back).
 Axis 3 : Left-To-Right.
 '''
-
 # Map categories to ensure correct visualization
-wall_points = point_coords[depth_values < road_depth_threshold]
+#If the axis direction is inverted:
+if depth_axis == 2:  # Assuming Axis 2 needs to be inverted
+    wall_points = point_coords[depth_values > road_depth_threshold]
+else:
+    wall_points = point_coords[depth_values < road_depth_threshold]
 
 # Create a tkinter window
 window = tk.Tk()
@@ -385,9 +385,15 @@ def create_2d_grid(wall_points, grid_resolution, point_coords, depth_axis):
     y_min, y_max = point_coords[:, y_axis].min(), point_coords[:, y_axis].max()
 
     # Determine 2D grid dimensions
-    x_range = int((x_max - x_min) / grid_resolution)
-    y_range = int((y_max - y_min) / grid_resolution)
+    x_range = int((x_max - x_min) / grid_resolution)+1
+    y_range = int((y_max - y_min) / grid_resolution)+1
     maze_grid_2d = np.zeros((x_range, y_range), dtype=int)
+
+    # Save wall points to a text file
+    wall_points_file = "wall_points.txt"
+    np.savetxt(wall_points_file, wall_points, delimiter=",", fmt="%.6f", header="x, y, z", comments="")
+    print(f"Wall points saved to {wall_points_file}")
+
 
     # Mark cells as blocked if they contain wall points
     for point in wall_points:
@@ -399,15 +405,35 @@ def create_2d_grid(wall_points, grid_resolution, point_coords, depth_axis):
     print(f"2D Grid Dimensions: {maze_grid_2d.shape}")
     print(f"Number of Walls: {np.sum(maze_grid_2d == 1)}")
     print(f"Number of Open Cells: {np.sum(maze_grid_2d == 0)}")
+    print(f"x_max= {x_max}, x_min= {x_min}, y_max= {y_max}, y_min= {y_min}")
 
     return maze_grid_2d
 
 def add_wall_buffer_2d(maze_grid_2d):
     print("Adding wall buffer to 2D grid...")
     return binary_dilation(maze_grid_2d, structure=np.ones((3, 3))).astype(int)
+######################################################################################################
 
-# Example usage:
-grid_resolution = 0.5  # Adjust as needed
+def calculate_dynamic_resolution(x_min, x_max, y_min, y_max):
+    # Calculate range for x and y
+    x_range = x_max - x_min
+    y_range = y_max - y_min
+    max_range = max(x_range, y_range)  # Use the larger of the two ranges
+
+    # Use the derived proportionality constant
+    k = 0.00425  # Adjust based on desired grid density
+    resolution = k * max_range
+    return resolution
+
+axes = [i for i in range(3) if i != depth_axis]
+x_axis, y_axis = axes
+x_min, x_max = point_coords[:, x_axis].min(), point_coords[:, x_axis].max()
+y_min, y_max = point_coords[:, y_axis].min(), point_coords[:, y_axis].max()
+# Calculate the dynamic grid resolution based on the maze dimensions
+grid_resolution = calculate_dynamic_resolution(x_min, x_max, y_min, y_max)
+print(f"Dynamic Grid Resolution: {grid_resolution}")
+
+
 
 maze_grid_2d = create_2d_grid(wall_points, grid_resolution, point_coords, depth_axis)
 maze_grid_2d = add_wall_buffer_2d(maze_grid_2d)
@@ -528,6 +554,7 @@ def visualize_selected_points():
 # Add the button to the UI
 btn_visualize_points = Button(window, text="Visualize Selected Points", command=visualize_selected_points)
 btn_visualize_points.pack(pady=20)
+
 
 
 # Run the tkinter main loop
