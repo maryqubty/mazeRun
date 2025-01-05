@@ -31,8 +31,7 @@ depth_axis = np.argmin(axis_variances)  # Axis with least variance is the depth
 print("Depth axis:", depth_axis)
 # Get depth values
 mazeDepth = np.asarray(mazePcd.points)[:, depth_axis] #depth_axis is the depth axis
-#save the sorted depth values in an output file - sorted
-np.savetxt("sorted_depth_values.txt", np.sort(mazeDepth), delimiter=",")
+
 
 # Analyze depth distribution to dynamically adjust thresholds
 depth_values = np.asarray(mazePcd.points)[:, depth_axis]
@@ -105,33 +104,6 @@ Initialize a binary map where:
 -> 0 represents an open cell (no wall points).
 '''
 
-'''
-def create_grid(wall_points, grid_resolution, point_coords):
-    print("Creating grid...")
-    # Step 1: Define grid parameters
-    x_min, x_max = point_coords[:, 0].min(), point_coords[:, 0].max()
-    y_min, y_max = point_coords[:, 1].min(), point_coords[:, 1].max()
-    z_min, z_max = point_coords[:, 2].min(), point_coords[:, 2].max()
-
-    # Determine grid dimensions
-    x_range = int((x_max - x_min) / grid_resolution)
-    y_range = int((y_max - y_min) / grid_resolution)
-    z_range = int((z_max - z_min) / grid_resolution)
-    maze_grid = np.zeros((x_range, y_range, z_range))
-
-    # Mark cells as blocked if they contain wall points
-    for point in wall_points:
-        x_idx = int((point[0] - x_min) / grid_resolution)
-        y_idx = int((point[1] - y_min) / grid_resolution)
-        z_idx = int((point[2] - z_min) / grid_resolution)
-        maze_grid[x_idx, y_idx, z_idx] = 1
-
-    print(f"Grid Dimensions: {maze_grid.shape}")
-    print(f"Number of Walls: {np.sum(maze_grid == 1)}")
-    print(f"Number of Open Cells: {np.sum(maze_grid == 0)}")
-
-    return maze_grid
-'''
 
 # Function to get the grid index of a point
 def get_grid_indice(point, grid_resolution, point_coords):
@@ -144,33 +116,6 @@ def get_grid_indice(point, grid_resolution, point_coords):
     point_indice = tuple([x_idx, y_idx, z_idx])
     return point_indice
 
-'''
-# Visualize the Voxelized Grid
-def visualize_grid():
-    np.savetxt("maze_grid.txt", maze_grid.reshape(-1, maze_grid.shape[2]), fmt="%d", delimiter=",")
-    print("Grid saved to 'maze_grid.txt'.")
-
-    print("Visualizing the voxelized grid...")
-    grid_points = []
-    x_min, y_min, z_min = point_coords[:, 0].min(), point_coords[:, 1].min(), point_coords[:, 2].min()
-    for x in range(maze_grid.shape[0]):
-        for y in range(maze_grid.shape[1]):
-            for z in range(maze_grid.shape[2]):
-                if maze_grid[x, y, z] == 1:
-                    grid_points.append([
-                        x_min + x * grid_resolution,
-                        y_min + y * grid_resolution,
-                        z_min + z * grid_resolution,
-                    ])
-    
-    grid_pcd = o3d.geometry.PointCloud()
-    grid_pcd.points = o3d.utility.Vector3dVector(np.array(grid_points))
-    o3d.visualization.draw_geometries([grid_pcd], window_name="Voxelized Grid")
-    
-# Add Grid Visualization Button
-btn_visualize_grid = Button(window, text="Visualize Grid", command=visualize_grid)
-btn_visualize_grid.pack(pady=20)
-'''
 
 # Function to visualize the 2D grid and select a point
 def visualize_2d_grid():
@@ -434,10 +379,8 @@ grid_resolution = calculate_dynamic_resolution(x_min, x_max, y_min, y_max)
 print(f"Dynamic Grid Resolution: {grid_resolution}")
 
 
-
 maze_grid_2d = create_2d_grid(wall_points, grid_resolution, point_coords, depth_axis)
 maze_grid_2d = add_wall_buffer_2d(maze_grid_2d)
-
 
 
 # Step 3: Specify start and exit points (in grid indices) (default values):
@@ -447,8 +390,7 @@ blocked_points = np.column_stack(np.where(maze_grid_2d == 1))
 # Pick the first and last walkable points
 start_point = (0,0) 
 exit_point = (0,0)
-print("Start Point (2D):", start_point)
-print("Exit Point (2D):", exit_point)
+
 
 # Step 4: Find the path
 #path = find_path(start_point, exit_point, maze_grid)
