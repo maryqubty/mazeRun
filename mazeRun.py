@@ -381,10 +381,59 @@ def find_and_visualize_path():
         height=600
     )
 
-
-
 btn_path = Button(window, text="Find Path", command=find_and_visualize_path)
 btn_path.pack(pady=20)
+
+
+def visualize_selected_points():
+    # Convert the selected start and exit points from 2D grid indices to 3D real-world coordinates
+    x_min, y_min, z_min = point_coords[:, 0].min(), point_coords[:, 1].min(), point_coords[:, 2].min()
+    max_depth = point_coords[:, depth_axis].max()  # Get the maximum value along the depth axis
+    max_depth_idx = int((max_depth - [x_min, y_min, z_min][depth_axis]) / grid_resolution)
+
+    selected_points = []
+    for point in [start_point, exit_point]:
+        idx_3d = [0, 0, 0]  # Initialize a 3D index
+        idx_3d[depth_axis] = max_depth_idx  # Set the depth axis to the max depth index
+
+        # Assign the 2D indices to the other two axes
+        axes_2d = [i for i in range(3) if i != depth_axis]
+        idx_3d[axes_2d[0]], idx_3d[axes_2d[1]] = point
+
+        real_coords = [
+            x_min + idx_3d[0] * grid_resolution,
+            y_min + idx_3d[1] * grid_resolution,
+            z_min + idx_3d[2] * grid_resolution,
+        ]
+        selected_points.append(real_coords)
+    
+    # Convert the selected points to a numpy array
+    selected_points = np.array(selected_points)
+
+    # Visualize the walls and selected points
+    # Walls visualization (point cloud)
+    walls_pcd = o3d.geometry.PointCloud()
+    walls_pcd.points = o3d.utility.Vector3dVector(wall_points)
+
+    # Selected points visualization (point cloud)
+    selected_pcd = o3d.geometry.PointCloud()
+    selected_pcd.points = o3d.utility.Vector3dVector(selected_points)
+
+    # Color the selected points red (RGB: [1, 0, 0])
+    selected_pcd.colors = o3d.utility.Vector3dVector(np.array([[1, 0, 0]] * len(selected_points)))
+
+    # Visualize the walls and selected points
+    o3d.visualization.draw_geometries(
+        [walls_pcd, selected_pcd],
+        window_name="Selected Points on Walls",
+        width=800,
+        height=600
+    )
+
+# Add the button to the UI
+btn_visualize_points = Button(window, text="Visualize Selected Points", command=visualize_selected_points)
+btn_visualize_points.pack(pady=20)
+
 
 # Run the tkinter main loop
 window.mainloop()
