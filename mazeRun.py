@@ -264,7 +264,7 @@ def select_start_point():
     selected_point_2d = np.delete(indice, depth_axis)
 
     #check if point s valid and walkable:
-    if selected_point_2d is not None and selected_point_2d in walkable_points: 
+    if selected_point_2d is not None: 
         print(f"Start Point Selected: {selected_point_2d}")
         start_point = tuple(selected_point_2d)
     else:
@@ -280,10 +280,14 @@ btn_select_start.pack(pady=20)
 def select_exit_point():
     global s_point, exit_point
     print("Select the exit point...")
-    visualize_2d_grid()
-    if s_point is not None and s_point in walkable_points:
-        print(f"Exit Point Selected: {s_point}")
-        exit_point = s_point # Select the last point
+    visualize_point_cloud_with_selection()
+    # Remove the depth axis coordinate from the selected point
+    indice= get_grid_indice(s_point, grid_resolution, point_coords)
+    selected_point_2d = np.delete(indice, depth_axis)
+
+    if selected_point_2d is not None:
+        print(f"Exit Point Selected: {selected_point_2d}")
+        exit_point = tuple(selected_point_2d)
     else:
         print("No exit point selected.")
     s_point = None  # Reset the selected point
