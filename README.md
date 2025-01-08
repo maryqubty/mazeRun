@@ -12,10 +12,13 @@ In this phase, the system extracts 3D point cloud data from COLMAP models and an
 - Identified open paths and walls for any 3D maze.
 
 
+![2025-01-08](https://github.com/user-attachments/assets/304da0c6-8d80-41f2-aac9-085a51689981)
 ![image](https://github.com/user-attachments/assets/5fb9bf2e-e740-4a69-89ed-d23c52a65403) ![image](https://github.com/user-attachments/assets/fcc4588a-a0cf-40c0-886a-3b93f4cf9e5f)
 
+![2025-01-08 (2)](https://github.com/user-attachments/assets/bdd39a23-d787-459b-9a80-bbfcfbaea9cc)
 ![image](https://github.com/user-attachments/assets/6e476063-1b63-49b3-9220-a4e1c7f739e2) ![image](https://github.com/user-attachments/assets/07d4762b-fbfe-4bb5-8c67-1bd48b8cd5dc)
 
+![2025-01-08 (1)](https://github.com/user-attachments/assets/acf40005-d678-4e26-a225-9bf918b04952)
 ![image](https://github.com/user-attachments/assets/c4d3bb86-7739-4d48-aee9-ab1e43f98d1d) ![image](https://github.com/user-attachments/assets/9512b776-b3d0-408c-b849-75b213e26b75)
 
 ![image](https://github.com/user-attachments/assets/025c6099-e570-4221-8c14-06acbd4b9c9a) ![image](https://github.com/user-attachments/assets/1513f382-4572-4bcc-b557-3f9f1d25904c)
