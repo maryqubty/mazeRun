@@ -11,20 +11,31 @@ In this phase, the system extracts 3D point cloud data from COLMAP models and an
 - Analyzed and processed 3D COLMAP models.
 - Identified open paths and walls for any 3D maze.
 
-<img src="https://github.com/user-attachments/assets/304da0c6-8d80-41f2-aac9-085a51689981" width="300">
-<img src="https://github.com/user-attachments/assets/5fb9bf2e-e740-4a69-89ed-d23c52a65403" width="300">
-<img src="https://github.com/user-attachments/assets/6e476063-1b63-49b3-9220-a4e1c7f739e2" width="300">
+<img src="![2025-01-08](https://github.com/user-attachments/assets/ba3fb419-1094-4829-813b-7ac79abd48f5)
+" width="150">
+<img src="![image](https://github.com/user-attachments/assets/0654a268-6422-49db-8928-08a79ea6b3ba)
+" width="150">
+<img src="![image](https://github.com/user-attachments/assets/01bcf63a-579a-4756-b8d7-dafe6149806c)
+" width="150">
 
-<img src="https://github.com/user-attachments/assets/bdd39a23-d787-459b-9a80-bbfcfbaea9cc" width="300">
-<img src="https://github.com/user-attachments/assets/6e476063-1b63-49b3-9220-a4e1c7f739e2" width="300">
-<img src="https://github.com/user-attachments/assets/c4d3bb86-7739-4d48-aee9-ab1e43f98d1d" width="300">
+<img src="![2025-01-08 (2)](https://github.com/user-attachments/assets/cf3f8861-ade2-45c2-b0bc-be505caf98df)
+" width="150">
+<img src="![image](https://github.com/user-attachments/assets/c3f3c824-148e-4337-8259-ad5a3516c616)
+" width="150">
+<img src="![image](https://github.com/user-attachments/assets/94976a82-c8b1-424a-b8b8-cdc40fc95f6a)
+" width="150">
 
-<img src="https://github.com/user-attachments/assets/acf40005-d678-4e26-a225-9bf918b04952" width="300">
-<img src="https://github.com/user-attachments/assets/c4d3bb86-7739-4d48-aee9-ab1e43f98d1d" width="300">
-<img src="https://github.com/user-attachments/assets/1513f382-4572-4bcc-b557-3f9f1d25904c" width="300">
+<img src="![2025-01-08 (1)](https://github.com/user-attachments/assets/5268e53a-8756-4be1-b413-c24c382395c3)
+" width="150">
+<img src="![image](https://github.com/user-attachments/assets/483af13a-da37-4b71-83da-0d83b262ede6)
+" width="150">
+<img src="![image](https://github.com/user-attachments/assets/b35993c8-7096-484d-b7dc-659a5257c180)
+" width="150">
 
-<img src="https://github.com/user-attachments/assets/025c6099-e570-4221-8c14-06acbd4b9c9a" width="300">
-<img src="https://github.com/user-attachments/assets/1513f382-4572-4bcc-b557-3f9f1d25904c" width="300">
+<img src="![image](https://github.com/user-attachments/assets/dbb56e2b-e63e-4f33-9197-7d989529aa2f)
+" width="150">
+<img src="![image](https://github.com/user-attachments/assets/8b8e3986-3944-4c66-8623-fcb0e7b16c5e)
+" width="150">
 
 ---
 
@@ -36,17 +47,25 @@ The second level focuses on converting 3D models into 2D grids and calculating t
 - Enabled user input for selecting start and exit points.
 - Implemented the A* algorithm to compute static (non-real-time) shortest paths.
 
-<img src="https://github.com/user-attachments/assets/2e6bf3b6-454a-4756-a993-dd9e14954b49" width="300">
-<img src="https://github.com/user-attachments/assets/9dcc80c4-8430-476a-9653-44ea3a7975ee" width="300">
+<img src="![image](https://github.com/user-attachments/assets/b8a3b6ec-1593-45a7-bf99-ce8c6d15b974)
+" width="150">
+<img src="![image](https://github.com/user-attachments/assets/e5cc3bd8-0707-466f-9fce-5b4009e95856)
+" width="200">
 
-<img src="https://github.com/user-attachments/assets/9e05d7f2-8a0f-4082-a8dd-996dbae56b76" width="300">
-<img src="https://github.com/user-attachments/assets/b06071ba-fa31-4cbb-bf78-2d81d2453847" width="300">
+<img src="![image](https://github.com/user-attachments/assets/122f2587-b992-4314-bb51-d7bddbd345af)
+" width="150">
+<img src="![image](https://github.com/user-attachments/assets/50df20be-86b8-48a9-9dee-2e215f77bdd3)
+" width="200">
 
-<img src="https://github.com/user-attachments/assets/2a0c995f-e317-4668-8be4-733f554ebabc" width="300">
-<img src="https://github.com/user-attachments/assets/f3b31a55-3102-432c-b44e-6cbe23b3e5db" width="300">
+<img src="![image](https://github.com/user-attachments/assets/453a72ee-fd17-40df-8158-cc1f177c1d94)
+" width="150">
+<img src="![image](https://github.com/user-attachments/assets/70bd5e7e-9eb9-461c-93d4-bde1f0dc789f)
+" width="200">
 
-<img src="https://github.com/user-attachments/assets/68adcfaa-f1cc-43a0-b479-5bc3b0798f5e" width="300">
-<img src="https://github.com/user-attachments/assets/4ea8e294-adab-4216-8a88-a11f610af1e6" width="300">
+<img src="![image](https://github.com/user-attachments/assets/7a9b26fa-159f-4101-ae5f-f904d8d8956e)
+" width="150">
+<img src="![image](https://github.com/user-attachments/assets/16b82de3-0347-4434-b8c1-322faa75e512)
+" width="200">
 
 ---
 
